@@ -1,0 +1,24 @@
+{
+  "name": "winget-json",
+  "version": "1.0.0",
+  "description": "A small library fetching repository data from winget and makes it accessible as static data",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "data"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "zx ./app/download.js && zx ./app/extract.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "dominik@bdbch.com",
+  "license": "MIT",
+  "dependencies": {
+    "json-format": "^1.0.1",
+    "tar": "^6.1.0",
+    "yaml": "^1.10.2",
+    "zx": "^1.14.1"
+  }
+}
