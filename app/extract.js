@@ -1,6 +1,6 @@
 #!/usr/bin/env zx
 
-const { readdirSync, readFileSync } = require("fs");
+const { readdirSync, readFileSync, existsSync } = require("fs");
 const { writeFileSync } = require("node:fs");
 const { join } = require("path");
 const jsonformat = require("json-format");
@@ -11,15 +11,39 @@ let applications = [];
 $`rm -rf ./data`;
 $`mkdir ./data`;
 
-const readManifest = (path) => {
+const getManifestContent = (path) => {
+  const content = readFileSync(path, "utf8");
+  return YAML.parse(content);
+};
+
+const readManifest = (path, moniker) => {
   try {
-    const content = readFileSync(path, "utf8");
-    const jsonContent = YAML.parse(content);
-    return { ...jsonContent, versions: [] };
+    let jsonContent = getManifestContent(path + `/${moniker}.yaml`);
+
+    if (existsSync(path + `/${moniker}.installer.yaml`)) {
+      const installerContent = getManifestContent(
+        path + `/${moniker}.installer.yaml`
+      );
+      jsonContent = { ...jsonContent, ...installerContent };
+    }
+
+    if (existsSync(path + `/${moniker}.locale.en-US.yaml`)) {
+      const localeContent = getManifestContent(
+        path + `/${moniker}.locale.en-US.yaml`
+      );
+      jsonContent = { ...jsonContent, ...localeContent };
+    }
+
+    return jsonContent;
   } catch (e) {
     console.error(e);
     return null;
   }
+};
+
+const readParentManifest = (path, moniker) => {
+  const manifest = readManifest(path, moniker);
+  return { ...manifest, versions: [] };
 };
 
 const manifestFolders = readdirSync(
@@ -43,11 +67,12 @@ manifestFolders.forEach((folder) => {
 
       // read manifest of latest version
       const lastVersion = versions[versions.length - 1];
-      const manifest = readManifest(
+      const manifest = readParentManifest(
         join(
           __dirname,
-          `../tmp/archive/manifests/${folder}/${dev}/${app}/${lastVersion}/${dev}.${app}.yaml`
-        )
+          `../tmp/archive/manifests/${folder}/${dev}/${app}/${lastVersion}`
+        ),
+        `${dev}.${app}`
       );
 
       if (manifest) {
@@ -55,8 +80,9 @@ manifestFolders.forEach((folder) => {
           const versionManifest = readManifest(
             join(
               __dirname,
-              `../tmp/archive/manifests/${folder}/${dev}/${app}/${version}/${dev}.${app}.yaml`
-            )
+              `../tmp/archive/manifests/${folder}/${dev}/${app}/${version}`
+            ),
+            `${dev}.${app}`
           );
 
           manifest.versions.push(versionManifest);
