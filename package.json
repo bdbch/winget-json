@@ -9,7 +9,10 @@
   ],
   "type": "module",
   "scripts": {
-    "build": "zx ./app/download.js && zx ./app/extract.js",
+    "prepublish": "npm run build",
+    "download": "zx ./app/download.js",
+    "extract": "zx ./app/extract.js",
+    "build": "npm run download && npm run extract",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
